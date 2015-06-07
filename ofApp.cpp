@@ -12,16 +12,15 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	static ofVec2f center(xRes/2.0, yRes/2.0);
-	static ofVec2f sourcePos;
+
+	int xPos;
 	mouseMutex.lock();
-	sourcePos = ofVec2f(mouseX, mouseY);
+	xPos = mouseX;
 	mouseMutex.unlock();
 
-	float diff = 1- ((center-sourcePos).length() / (float) xRes );
-
 	gainMutex.lock();
-	gainR = gainL = diff;
+	gainR = (float)xPos/xRes;
+	gainL = 1-(float)xPos/xRes;
 	gainMutex.unlock();
 }
 //--------------------------------------------------------------
