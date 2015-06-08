@@ -13,10 +13,11 @@ void ofApp::setup(){
   speakers.quadSetup();	// Setup quadraphonic system
 
   phase = 0;
+	
 #ifdef USING_4CHANNELS
   ofSoundStreamSetup(4, 0); // 4 output channels, 0 input channels
 #else
-  ofSoundStreamSetup(2, 0); // 2 output channels, 0 input channels
+	ofSoundStreamSetup(2, 0);
 #endif
 
 }
@@ -33,7 +34,7 @@ float compute_gain(ofVec2f &object, ofVec2f &speaker)
 		active = 1;
 	
 	// Linear trend
-	return active*abs( 1.0 - ( angle / 90 ) );
+	return active*( 1.0 - ( angle / 90 ) );
 
 	// Tangent
 	// float tmp = 0.5*( 1 + tan(angleRad - M_PI/4) ) ;
@@ -77,20 +78,20 @@ void ofApp::update(){
 // 	gainMutex.unlock();
 
 	gainMutex.lock();
-	gainFR = compute_gain(d, speakers.position[0]);
-	gainFL = compute_gain(d, speakers.position[1]);
+	gainFR = compute_gain(d, speakers.channelFR());
+	gainFL = compute_gain(d, speakers.channelFL());
 #ifdef USING_4CHANNELS
-	gainRL = compute_gain(d, speakers.position[2]);
-	gainRR = compute_gain(d, speakers.position[3]);
+	gainRL = compute_gain(d, speakers.channelRL());
+	gainRR = compute_gain(d, speakers.channelRR());
 #endif
 	gainMutex.unlock();
 
 	// *** GAIN MUTEX END ***
 
-	// cout << gainFR << " " << 
-	// 		gainFL << " " <<
-	// 		gainRL << " " <<
-	// 		gainRR << " " << endl;
+//	cout << gainFR << " " << 
+//		    gainFL << " " <<
+//	 		gainRL << " " <<
+//	 		gainRR << " " << endl;
 }
 //--------------------------------------------------------------
 void ofApp::draw(){
@@ -108,15 +109,15 @@ void ofApp::audioOut( float * output, int bufferSize, int nChannels ) {
   gainMutex.lock();
   gFL = gainFL;
   gFR = gainFR;
+  gRL = gainRL;
+  gRR = gainRR;	
   gainMutex.unlock();
   // *** GAIN MUTEX END ***
 
-  //cout << "                " << gFL << " " << gFR << endl;
-
-  for(int i = 0; i < bufferSize * nChannels; i += 2) {
-    float sample = sin(phase); // generating a sine wave sample
-    output[i] = gFL*sample; 
-    output[i+1] = gFR*sample; 
+  for(int i = 0; i < bufferSize * nChannels; i += nChannels) {
+    float sample = sin(phase); 
+    output[i] = gFR*sample; 
+    output[i+1] = gFL*sample; 
 #ifdef USING_4CHANNELS    
     output[i+2] = gRL*sample;
 	output[i+3] = gRR*sample;  
