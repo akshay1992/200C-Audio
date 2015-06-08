@@ -3,7 +3,7 @@
 int xRes = 400;
 int yRes = 400;
 
-// #define USING_4CHANNELS
+#define USING_4CHANNELS
 
 //--------------------------------------------------------------
 void ofApp::setup(){
