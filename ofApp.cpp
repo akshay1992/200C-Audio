@@ -7,20 +7,33 @@ int yRes = 400;
 //--------------------------------------------------------------
 void ofApp::setup(){
   phase = 0;
-  ofSoundStreamSetup(2, 0); // 2 output channels (stereo), 0 input channels
+  ofSoundStreamSetup(4, 0); // 2 output channels (stereo), 0 input channels
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 
-	int xPos;
+	int xPos, yPos;
 	mouseMutex.lock();
 	xPos = mouseX;
+	yPos = mouseY;
 	mouseMutex.unlock();
-
+		
+	if(xPos > xRes)
+		xPos = xRes-1;
+	else if(xPos < 0)
+		xPos = 0;
+	
+	if(xPos > xRes)
+		yPos = xRes-1;
+	else if(xPos < 0)
+		yPos = 0;
+	
 	gainMutex.lock();
-	gainR = (float)xPos/xRes;
-	gainL = 1-(float)xPos/xRes;
+	gainFR = (float)xPos/xRes;
+	gainFL = 1-(float)xPos/xRes;
+	gainRR = (float)xPos/xRes;
+	gainRL = 1-(float)xPos/xRes;
 	gainMutex.unlock();
 }
 //--------------------------------------------------------------
@@ -30,20 +43,23 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::audioOut( float * output, int bufferSize, int nChannels ) {
 
-  static float gL , gR;
+  static float gFL , gFR, gRL, gRR;
+	
 
   gainMutex.lock();
-  gL = gainL;
-  gR = gainR;
+  gFL = gainFL;
+  gFR = gainFR;
   gainMutex.unlock();
 
-  // cout << "                " << gL << " " << gR << endl;
+  //cout << "                " << gFL << " " << gFR << endl;
 
   for(int i = 0; i < bufferSize * nChannels; i += 2) {
     float sample = sin(phase); // generating a sine wave sample
-    output[i] = gL*sample; // writing to the left channel
-    output[i+1] = gR*sample; // writing to the right channel
-    phase += 0.05;
+    output[i] = gFL*sample; // writing to the left channel
+    output[i+1] = gFR*sample; // writing to the right channel
+    output[i+2] = gRL*sample;
+	output[i+3] = gRR*sample;  
+	phase += 0.01;
   }
 }
 //--------------------------------------------------------------

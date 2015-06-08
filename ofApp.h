@@ -21,7 +21,7 @@ class ofApp : public ofBaseApp{
 		void audioOut( float * output, int bufferSize, int nChannels );
   		double phase;
 
-  		float gainL, gainR;
+  		float gainFL, gainFR, gainRL, gainRR;
   		ofMutex gainMutex;
 
 		int mouseX;
