@@ -2,6 +2,8 @@
 
 #include "ofMain.h"
 
+#include "SpeakerSetup.h"
+
 class ofApp : public ofBaseApp{
 	public:
 		void setup();
@@ -27,4 +29,5 @@ class ofApp : public ofBaseApp{
 		int mouseX;
 		int mouseY;
 		ofMutex mouseMutex;
+		SpeakerSetup speakers;
 };
