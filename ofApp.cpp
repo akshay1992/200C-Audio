@@ -1,8 +1,8 @@
 #include "ofApp.h"
 #include <assert.h>
 
-int xRes = 400;
-int yRes = 400;
+int xRes = 1000;
+int yRes = 1000;
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -92,6 +92,7 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	ofCircle(xRes/2, yRes/2, speakers.radius);
+	ofCircle(mouseX, mouseY, speakers.radius);
 }
 //--------------------------------------------------------------
 void ofApp::audioOut( float * output, int bufferSize, int nChannels ) {
@@ -114,7 +115,7 @@ void ofApp::audioOut( float * output, int bufferSize, int nChannels ) {
     output[i+1] = gFL*sample; 
     output[i+2] = gRL*sample;
 	output[i+3] = gRR*sample;  
-	phase += 0.01;
+	phase += 0.02;
   }
 }
 //--------------------------------------------------------------
