@@ -13,16 +13,19 @@ void ofApp::setup(){
   phase = 0;
 	
   ofSoundStreamSetup(4, 0); // 4 output channels, 0 input channels
-
 }
 
-float compute_dist_gain(ofVec2f &object)
+float compute_dist_gain(ofVec2f &object, float speaker_radius)
 {
-	// float distGain = speaker.length()/object.length();
-	float distGain = 1.0/(object).length();
+	float relative_distance = object.length()/speaker_radius;
+	if (relative_distance<1)
+		relative_distance = 1;
+	return 1.0/relative_distance;
+}
 
-	return distGain;
-
+float magnitude4f(float a, float b, float c, float d)
+{
+	return sqrt(a*a+b*b+c*c+d*d);
 }
 
 float compute_azimuth_gain(ofVec2f &object, ofVec2f &speaker)
@@ -54,7 +57,7 @@ void ofApp::update(){
 	yPos = - yPos + yRes*0.5;
 
 	ofVec2f d(xPos, yPos);
-	float distGain = compute_dist_gain(d);
+	float distGain = compute_dist_gain(d, speakers.radius);
 
     // *** GAIN MUTEX START ***
 	gainMutex.lock();
@@ -62,15 +65,29 @@ void ofApp::update(){
 	gainFL = compute_azimuth_gain(d, speakers.channelFL());
 	gainRL = compute_azimuth_gain(d, speakers.channelRL());
 	gainRR = compute_azimuth_gain(d, speakers.channelRR());
+
+	// Normalize gains
+	float norm = magnitude4f(gainFR, gainFL, gainRL, gainRR);
+	gainFR /= norm;
+	gainFL /= norm;
+	gainRL /= norm;
+	gainRR /= norm;
+
+	// Distance-based gain
+	gainFR *= distGain; 
+	gainFL *= distGain; 
+	gainRL *= distGain; 
+	gainRR *= distGain; 	
+
 	gainMutex.unlock();
 	// *** GAIN MUTEX END ***
 
 	cout << gainFR << " " << 
 		    gainFL << " " <<
 	 		gainRL << " " <<
-	 		gainRR << " " /*<< endl*/;
+	 		gainRR << " " << endl;
+	cout << "    Power: "<<  magnitude4f(gainFR, gainFL, gainRL, gainRR) << endl;
 
-	cout << sqrt(gainFR*gainFR + gainFL*gainFL + gainRR*gainRR + gainRL*gainRL) << endl;
 }
 //--------------------------------------------------------------
 void ofApp::draw(){
