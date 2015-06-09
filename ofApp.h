@@ -30,4 +30,5 @@ class ofApp : public ofBaseApp{
 		int mouseY;
 		ofMutex mouseMutex;
 		SpeakerSetup speakers;
+	    float freq_shift;
 };

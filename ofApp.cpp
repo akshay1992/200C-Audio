@@ -56,7 +56,10 @@ void ofApp::update(){
 	xPos = xPos - xRes*0.5;
 	yPos = - yPos + yRes*0.5;
 
+
 	ofVec2f d(xPos, yPos);
+	static ofVec2f prev_d = d;
+	
 	float distGain = compute_dist_gain(d, speakers.radius);
 
     // *** GAIN MUTEX START ***
@@ -72,6 +75,8 @@ void ofApp::update(){
 	gainFL /= norm;
 	gainRL /= norm;
 	gainRR /= norm;
+	
+	freq_shift = 0.00008*-1*(d.length() - prev_d.length());
 
 	// Distance-based gain
 	gainFR *= distGain; 
@@ -81,6 +86,8 @@ void ofApp::update(){
 
 	gainMutex.unlock();
 	// *** GAIN MUTEX END ***
+	
+    prev_d = d;
 
 	cout << gainFR << " " << 
 		    gainFL << " " <<
@@ -115,7 +122,7 @@ void ofApp::audioOut( float * output, int bufferSize, int nChannels ) {
     output[i+1] = gFL*sample; 
     output[i+2] = gRL*sample;
 	output[i+3] = gRR*sample;  
-	phase += 0.02;
+	phase += 0.05 + freq_shift;
   }
 }
 //--------------------------------------------------------------
