@@ -4,8 +4,6 @@
 int xRes = 400;
 int yRes = 400;
 
-#define USING_4CHANNELS
-
 //--------------------------------------------------------------
 void ofApp::setup(){
 
@@ -14,38 +12,30 @@ void ofApp::setup(){
 
   phase = 0;
 	
-#ifdef USING_4CHANNELS
   ofSoundStreamSetup(4, 0); // 4 output channels, 0 input channels
-#else
-	ofSoundStreamSetup(2, 0);
-#endif
 
 }
 
-float compute_gain(ofVec2f &object, ofVec2f &speaker)
+float compute_dist_gain(ofVec2f &object)
+{
+	// float distGain = speaker.length()/object.length();
+	float distGain = 1.0/(object).length();
+
+	return distGain;
+
+}
+
+float compute_azimuth_gain(ofVec2f &object, ofVec2f &speaker)
 {
 	float angle = abs(object.angle(speaker));
 	float angleRad = abs(object.angleRad(speaker));
 
-	int active;
-	if (angle>90) 
-		active = 0;
-	else 
-		active = 1;
-	
-	// Linear trend
-	return active*( 1.0 - ( angle / 90 ) );
+	// Linear trend (with 'active pair')
+	// int active = angle>90 ? 0 : 1;
+	// return active*( 1.0 - ( angle / 90 ) )*distGain;
 
-	// Tangent
-	// float tmp = 0.5*( 1 + tan(angleRad - M_PI/4) ) ;
-	// cout << "                                                " << tmp << endl;
-	// float gain;
-	// if(angle > 45) 
-	// 	gain = tmp;
-	// else 
-	// 	gain = 1-tmp;
-	// return active*gain;
-
+	// Linear trend (without 'active pair')
+	return ( 1.0 - ( angle / 180 ) ) ;
 }
 
 //--------------------------------------------------------------
@@ -64,34 +54,23 @@ void ofApp::update(){
 	yPos = - yPos + yRes*0.5;
 
 	ofVec2f d(xPos, yPos);
+	float distGain = compute_dist_gain(d);
 
     // *** GAIN MUTEX START ***
-
-    // USING VECTORS (Doesn't work)
-// 	gainMutex.lock();
-// 	gainFR = 1.0 / ( d.length() / speakers.radius * cos(abs( d.angle(speakers.position[0]))) );
-// 	gainFL = 1.0 / ( d.length() / speakers.radius * cos(abs( d.angle(speakers.position[1]))) );
-// #ifdef USING_4CHANNELS
-// 	gainRL = 1.0 / ( d.length() / speakers.radius * cos(abs( d.angle(speakers.position[2]))) );
-// 	gainRR = 1.0 / ( d.length() / speakers.radius * cos(abs( d.angle(speakers.position[3]))) );
-// #endif
-// 	gainMutex.unlock();
-
 	gainMutex.lock();
-	gainFR = compute_gain(d, speakers.channelFR());
-	gainFL = compute_gain(d, speakers.channelFL());
-#ifdef USING_4CHANNELS
-	gainRL = compute_gain(d, speakers.channelRL());
-	gainRR = compute_gain(d, speakers.channelRR());
-#endif
+	gainFR = compute_azimuth_gain(d, speakers.channelFR());
+	gainFL = compute_azimuth_gain(d, speakers.channelFL());
+	gainRL = compute_azimuth_gain(d, speakers.channelRL());
+	gainRR = compute_azimuth_gain(d, speakers.channelRR());
 	gainMutex.unlock();
-
 	// *** GAIN MUTEX END ***
 
-//	cout << gainFR << " " << 
-//		    gainFL << " " <<
-//	 		gainRL << " " <<
-//	 		gainRR << " " << endl;
+	cout << gainFR << " " << 
+		    gainFL << " " <<
+	 		gainRL << " " <<
+	 		gainRR << " " /*<< endl*/;
+
+	cout << sqrt(gainFR*gainFR + gainFL*gainFL + gainRR*gainRR + gainRL*gainRL) << endl;
 }
 //--------------------------------------------------------------
 void ofApp::draw(){
@@ -101,9 +80,7 @@ void ofApp::draw(){
 void ofApp::audioOut( float * output, int bufferSize, int nChannels ) {
 
   static float gFL , gFR;
-#ifdef USING_4CHANNELS
   static float gRL, gRR;
-#endif	
 
   // *** GAIN MUTEX START ***
   gainMutex.lock();
@@ -118,10 +95,8 @@ void ofApp::audioOut( float * output, int bufferSize, int nChannels ) {
     float sample = sin(phase); 
     output[i] = gFR*sample; 
     output[i+1] = gFL*sample; 
-#ifdef USING_4CHANNELS    
     output[i+2] = gRL*sample;
 	output[i+3] = gRR*sample;  
-#endif
 	phase += 0.01;
   }
 }
